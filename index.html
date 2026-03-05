@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>Zoxan AI · futuristic intelligence</title>
+  <!-- PWA primary meta -->
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Zoxan AI">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='black'/%3E%3Ctext x='50' y='70' font-size='50' text-anchor='middle' fill='white' font-family='Kavoon'%3EZ%3C/text%3E%3C/svg%3E">
+  
+  <!-- CDN libraries (external, allowed) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Kavoon&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/izitoast@1.4.0/dist/css/iziToast.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/izitoast@1.4.0/dist/js/iziToast.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* custom micro-interactions & dynamic island */
+    * { font-family: 'Poppins', sans-serif; }
+    .font-kavoon { font-family: 'Kavoon', cursive; }
+    body { transition: background-color 0.3s ease, color 0.2s ease; }
+    
+    /* splash */
+    #splash {
+      position: fixed; inset: 0; z-index: 1000;
+      background: white; display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.5s ease, visibility 0.5s;
+    }
+    .dark #splash { background: #0a0a0a; color: white; }
+    #main-content { opacity: 0; transition: opacity 0.6s ease; }
+    
+    /* DYNAMIC ISLAND - new list style */
+    .island-wrapper {
+      position: fixed;
+      top: 1rem;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 50;
+    }
+    .dynamic-island {
+      background: #000;
+      color: white;
+      border-radius: 40px;
+      padding: 0; /* padding controlled by inner */
+      width: 140px;
+      transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), height 0.3s ease, border-radius 0.3s;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      overflow: hidden;
+      pointer-events: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .dynamic-island.expanded {
+      width: 260px;
+      border-radius: 36px;
+      background: #1a1a1a;
+    }
+    .dark .dynamic-island { background: #1e1e1e; }
+    .dark .dynamic-island.expanded { background: #2a2a2a; }
+
+    /* island header (always visible) */
+    .island-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      transition: padding 0.2s;
+    }
+    .island-header span { font-size: 0.95rem; font-weight: 450; }
+
+    /* expanded menu list */
+    .island-menu-list {
+      opacity: 0;
+      max-height: 0;
+      transition: opacity 0.2s ease, max-height 0.4s ease;
+      background: #1a1a1a;
+      border-radius: 0 0 30px 30px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .dark .island-menu-list { background: #2a2a2a; }
+    .dynamic-island.expanded .island-menu-list {
+      opacity: 1;
+      max-height: 280px; /* enough for 5 items */
+      transition: opacity 0.2s ease 0.1s, max-height 0.4s ease;
+    }
+    .menu-item {
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: 450;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      transition: background 0.15s, padding 0.2s;
+      cursor: pointer;
+      text-align: left;
+    }
+    .menu-item:first-child { border-top: none; }
+    .menu-item:hover { background: rgba(255,255,255,0.1); }
+    
+    /* cards & rest same as before (preserved) */
+    .feature-card {
+      background: white; border-radius: 28px; padding: 1.5rem; 
+      box-shadow: 0 8px 20px rgba(0,0,0,0.02), 0 2px 6px rgba(0,0,0,0.02);
+      transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer;
+    }
+    .feature-card:hover { transform: translateY(-4px); box-shadow: 0 16px 30px rgba(0,0,0,0.04); }
+    .dark .feature-card { background: #1e1e1e; color: #f0f0f0; box-shadow: 0 8px 20px rgba(255,255,255,0.02); }
+    
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(4px);
+      z-index: 2000; display: flex; align-items: center; justify-content: center;
+      opacity: 0; visibility: hidden; transition: 0.2s;
+    }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+    .modal-content {
+      background: white; border-radius: 36px; max-width: 500px; width: 90%; padding: 2rem;
+      box-shadow: 0 30px 50px rgba(0,0,0,0.1); transform: scale(0.95); transition: 0.2s;
+    }
+    .modal-overlay.active .modal-content { transform: scale(1); }
+    .dark .modal-content { background: #1a1a1a; color: white; }
+    
+    .theme-btn { border-radius: 40px; padding: 10px 20px; border: 1px solid #ddd; cursor: pointer; }
+    .dark .theme-btn { border-color: #444; }
+    
+    .blue-tick { display: inline-flex; align-items: center; background: #1E9BF0; border-radius: 20px; padding: 2px 10px; color: white; font-size: 0.8rem; margin-left: 6px; }
+    
+    .try-button {
+      background: #000; color: white; border: none; border-radius: 60px; padding: 18px 40px;
+      font-size: 1.4rem; font-weight: 500; box-shadow: 0 12px 20px -10px rgba(0,0,0,0.2);
+      transition: transform 0.1s ease, box-shadow 0.1s ease; cursor: pointer; display: inline-block;
+    }
+    .try-button:hover { transform: translateY(-3px); box-shadow: 0 20px 25px -8px rgba(0,0,0,0.3); }
+    .try-button:active { transform: translateY(2px); box-shadow: 0 5px 12px -5px rgba(0,0,0,0.2); }
+    .dark .try-button { background: #2b2b2b; color: white; }
+    
+    .section-padding { padding: 4rem 1.5rem; }
+    @media (min-width: 640px) { .section-padding { padding: 6rem 2rem; } }
+    .desc-card { background: #f9f9f9; border-radius: 30px; padding: 2rem; margin: 1.5rem 0; }
+    .dark .desc-card { background: #151515; }
+  </style>
+</head>
+<body class="bg-white text-gray-900 dark:bg-black dark:text-gray-100 transition-colors duration-300">
+
+<!-- SPLASH SCREEN (exactly 3 sec) -->
+<div id="splash" class="flex-col animate__animated animate__fadeIn">
+  <div class="text-center animate__animated animate__pulse animate__slow">
+    <div class="font-kavoon text-7xl md:text-8xl tracking-tight">Zoxan AI</div>
+    <div class="text-lg mt-4 text-gray-500 dark:text-gray-400">Developed by Anshu Studio</div>
+    <div class="mt-8 w-12 h-12 border-2 border-black dark:border-white border-t-transparent rounded-full animate-spin"></div>
+  </div>
+</div>
+
+<!-- MAIN LANDING PAGE (hidden until splash fades) -->
+<div id="main-content" class="opacity-0">
+
+  <!-- DYNAMIC ISLAND (new list version) -->
+  <div class="island-wrapper">
+    <div class="dynamic-island" id="dynamicIsland">
+      <!-- header always visible -->
+      <div class="island-header">
+        <i data-lucide="menu" class="w-5 h-5"></i>
+        <span>menu</span>
+      </div>
+      <!-- expanded menu list -->
+      <div class="island-menu-list">
+        <div class="menu-item" data-menu="home">Home</div>
+        <div class="menu-item" data-menu="features">Features</div>
+        <div class="menu-item" data-menu="try">Try Zoxan AI</div>
+        <div class="menu-item" data-menu="settings">Settings</div>
+        <div class="menu-item" data-menu="dev">Developer</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- spacer for fixed island -->
+  <div class="h-20"></div>
+
+  <!-- HERO SECTION -->
+  <section class="section-padding pt-10 text-center">
+    <h1 class="font-kavoon text-7xl md:text-8xl lg:text-9xl tracking-tight">Zoxan AI</h1>
+    <p class="text-xl md:text-2xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto mt-6 leading-relaxed">
+      Next generation AI conversation platform built for intelligence, creativity and productivity.
+    </p>
+    <div class="mt-4 text-sm text-gray-400 flex items-center justify-center gap-2">
+      <span>Developed by Anshu Studio</span>
+    </div>
+  </section>
+
+  <!-- MULTI‑LEVEL DESCRIPTION BLOCKS (cards) -->
+  <section class="section-padding pt-0 max-w-5xl mx-auto">
+    <div class="desc-card">
+      <h2 class="font-kavoon text-3xl mb-3">What is Zoxan AI</h2>
+      <p class="text-lg text-gray-600 dark:text-gray-300">Advanced AI chat system · natural conversation · deep knowledge exploration</p>
+    </div>
+    <div class="desc-card">
+      <h2 class="font-kavoon text-3xl mb-3">Smart Conversations</h2>
+      <p class="text-lg text-gray-600 dark:text-gray-300">Human‑like responses · intelligent context awareness · fast, accurate answers</p>
+    </div>
+    <div class="desc-card">
+      <h2 class="font-kavoon text-3xl mb-3">Productivity Engine</h2>
+      <p class="text-lg text-gray-600 dark:text-gray-300">Writing help · coding assistance · brainstorming ideas at scale</p>
+    </div>
+  </section>
+
+  <!-- FEATURE CARDS GRID -->
+  <section class="section-padding pt-0">
+    <h2 class="font-kavoon text-4xl text-center mb-12">Capabilities</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+      <!-- card 1: AI Chat System -->
+      <div class="feature-card" data-feature="chat" style="background: #e6f0fa;">
+        <i data-lucide="message-circle" class="w-8 h-8 mb-4 text-black dark:text-black"></i>
+        <h3 class="font-kavoon text-2xl mb-2">AI Chat System</h3>
+        <p class="text-gray-700">Seamless dialogue with long‑term memory & personality.</p>
+      </div>
+      <!-- card 2: Knowledge Engine -->
+      <div class="feature-card" data-feature="knowledge" style="background: #fde7e0;">
+        <i data-lucide="database" class="w-8 h-8 mb-4 text-black"></i>
+        <h3 class="font-kavoon text-2xl mb-2">Knowledge Engine</h3>
+        <p class="text-gray-700">Real‑time web search, document Q&A, deep research.</p>
+      </div>
+      <!-- card 3: Smart Writing -->
+      <div class="feature-card" data-feature="writing" style="background: #e0f2e6;">
+        <i data-lucide="pen-tool" class="w-8 h-8 mb-4 text-black"></i>
+        <h3 class="font-kavoon text-2xl mb-2">Smart Writing</h3>
+        <p class="text-gray-700">Draft emails, blogs, reports with creative flow.</p>
+      </div>
+      <!-- card 4: Code Assistant -->
+      <div class="feature-card" data-feature="code" style="background: #f3e8ff;">
+        <i data-lucide="code" class="w-8 h-8 mb-4 text-black"></i>
+        <h3 class="font-kavoon text-2xl mb-2">Code Assistant</h3>
+        <p class="text-gray-700">Debug, explain, generate in 20+ languages.</p>
+      </div>
+      <!-- card 5: Creative AI -->
+      <div class="feature-card" data-feature="creative" style="background: #fff1d6;">
+        <i data-lucide="sparkles" class="w-8 h-8 mb-4 text-black"></i>
+        <h3 class="font-kavoon text-2xl mb-2">Creative AI</h3>
+        <p class="text-gray-700">Storytelling, image prompts, brainstorming partner.</p>
+      </div>
+      <!-- card 6: Future AI Tools -->
+      <div class="feature-card" data-feature="future" style="background: #d9e9f7;">
+        <i data-lucide="cpu" class="w-8 h-8 mb-4 text-black"></i>
+        <h3 class="font-kavoon text-2xl mb-2">Future AI Tools</h3>
+        <p class="text-gray-700">Agent workflows, automation, custom skills (2025).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRY ZOXAN AI BUTTON + small text -->
+  <section class="text-center pb-16">
+    <button class="try-button" id="tryZoxanBtn">Try Zoxan AI</button>
+    <p class="text-sm text-gray-400 mt-4">Experience the future — early access</p>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-gray-200 dark:border-gray-800 py-12 px-4">
+    <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+      <div class="text-center md:text-left">
+        <span class="font-kavoon text-2xl">Zoxan AI</span>
+        <p class="text-sm text-gray-500">Developed by Anshu Studio</p>
+      </div>
+      <div class="flex flex-col items-center md:items-end">
+        <div class="flex items-center gap-1">
+          <span class="text-sm">Instagram:</span>
+          <a href="#" class="font-medium flex items-center">@anshurajhas
+            <span class="blue-tick ml-1">✓ verified</span>
+          </a>
+        </div>
+        <div class="flex gap-6 mt-2 text-sm text-gray-500">
+          <a href="#">About</a>
+          <a href="#">Privacy</a>
+          <a href="#">Future Updates</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MODAL: Feature detail (dynamic) -->
+  <div class="modal-overlay" id="featureModal">
+    <div class="modal-content" id="modalDynamicContent">
+      <!-- filled by js -->
+    </div>
+  </div>
+
+  <!-- MODAL: Settings panel -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal-content">
+      <h2 class="font-kavoon text-3xl mb-6">Settings</h2>
+      <div class="mb-6">
+        <p class="mb-2 font-medium">Theme</p>
+        <div class="flex gap-4">
+          <button class="theme-btn" id="themeLight">Light</button>
+          <button class="theme-btn" id="themeDark">Dark</button>
+        </div>
+      </div>
+      <button class="mt-4 text-sm text-gray-500 underline" id="closeSettings">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- inline javascript (all interactions, PWA, service worker) -->
+<script>
+  (function() {
+    // ----- SPLASH -----
+    const splash = document.getElementById('splash');
+    const main = document.getElementById('main-content');
+    setTimeout(() => {
+      splash.style.opacity = '0';
+      splash.style.visibility = 'hidden';
+      main.style.opacity = '1';
+    }, 3000);
+
+    // ----- INIT LUCIDE ICONS -----
+    lucide.createIcons();
+
+    // ----- DYNAMIC ISLAND TOGGLE (list style) -----
+    const island = document.getElementById('dynamicIsland');
+    island.addEventListener('click', (e) => {
+      e.stopPropagation();
+      island.classList.toggle('expanded');
+    });
+    // close if click outside
+    document.addEventListener('click', (e) => {
+      if (!island.contains(e.target) && island.classList.contains('expanded')) {
+        island.classList.remove('expanded');
+      }
+    });
+
+    // ----- MENU ITEMS (click on any .menu-item) -----
+    const menuItems = document.querySelectorAll('.menu-item');
+    const settingsModal = document.getElementById('settingsModal');
+    const featureModal = document.getElementById('featureModal');
+    const modalContent = document.getElementById('modalDynamicContent');
+
+    menuItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const cmd = item.getAttribute('data-menu');
+        if (cmd === 'settings') {
+          settingsModal.classList.add('active');
+        } else if (cmd === 'home') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else if (cmd === 'features') {
+          document.querySelector('.feature-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (cmd === 'try') {
+          triggerTryZoxan();
+        } else if (cmd === 'dev') {
+          iziToast.show({ title: '👨‍💻 Anshu Studio', message: '@anshurajhas (verified)', position: 'topRight', color: 'blue' });
+        }
+        island.classList.remove('expanded'); // collapse after action
+      });
+    });
+
+    // ----- FEATURE CARD DETAIL MODAL (same as before) -----
+    const cards = document.querySelectorAll('.feature-card');
+    const featureDetails = {
+      chat: { title: 'AI Chat System', desc: 'Natural, flowing conversation with persistent memory. Understands nuance, slang, and context across long sessions. Perfect for support, companionship, or deep dialogue.', examples: '• Contextual recall up to 1M tokens\n• Multi‑language code switching\n• Emotionally aware responses' },
+      knowledge: { title: 'Knowledge Engine', desc: 'Instantly tap into a constantly updated knowledge graph. Ask about recent events, research papers, or your own documents.', examples: '• Real‑time web search\n• PDF / website analysis\n• Cite sources automatically' },
+      writing: { title: 'Smart Writing', desc: 'Your AI co‑writer for any genre: from legal briefs to poetry. Outlines, expansions, or polishing.', examples: '• 50+ templates\n• Tone adjustment\n• Plagiarism‑free generation' },
+      code: { title: 'Code Assistant', desc: 'Write, debug, and explain code with an AI that knows 20+ programming languages.', examples: '• Generate unit tests\n• Refactor legacy code\n• Explain complex algorithms' },
+      creative: { title: 'Creative AI', desc: 'Brainstorming partner that never runs out of ideas. Story plots, marketing hooks, visual art prompts.', examples: '• Character development\n• Social media campaigns\n• DALL·E prompt engineering' },
+      future: { title: 'Future AI Tools', desc: 'Be among the first to access agentic workflows, multimodal models, and custom skill plugins.', examples: '• Autonomous research agents\n• Video understanding\n• Custom GPT store' }
+    };
+
+    cards.forEach(card => {
+      card.addEventListener('click', () => {
+        const key = card.getAttribute('data-feature');
+        const data = featureDetails[key] || { title: 'Zoxan AI', desc: 'More details coming soon.', examples: '' };
+        modalContent.innerHTML = `
+          <h2 class="font-kavoon text-4xl mb-4">${data.title}</h2>
+          <p class="text-gray-600 dark:text-gray-300 mb-4">${data.desc}</p>
+          <pre class="whitespace-pre-wrap text-sm bg-gray-100 dark:bg-gray-800 p-4 rounded-2xl">${data.examples}</pre>
+          <button class="mt-6 text-sm text-gray-500 underline" id="closeFeatureModal">Close</button>
+        `;
+        featureModal.classList.add('active');
+        document.getElementById('closeFeatureModal')?.addEventListener('click', () => {
+          featureModal.classList.remove('active');
+        });
+      });
+    });
+
+    featureModal.addEventListener('click', (e) => {
+      if (e.target === featureModal) featureModal.classList.remove('active');
+    });
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) settingsModal.classList.remove('active');
+    });
+    document.getElementById('closeSettings')?.addEventListener('click', () => {
+      settingsModal.classList.remove('active');
+    });
+
+    // ----- TRY ZOXAN BUTTON (SweetAlert2) -----
+    function triggerTryZoxan() {
+      Swal.fire({
+        title: 'Access Restricted',
+        text: 'You don\'t have permission to use this feature yet. Zoxan AI is currently under development.',
+        icon: 'info',
+        confirmButtonText: 'OK',
+        showCloseButton: true,
+        background: document.body.classList.contains('dark') ? '#1e1e1e' : '#fff',
+        color: document.body.classList.contains('dark') ? '#fff' : '#000'
+      });
+    }
+    document.getElementById('tryZoxanBtn').addEventListener('click', triggerTryZoxan);
+
+    // ----- THEME TOGGLE -----
+    const themeLight = document.getElementById('themeLight');
+    const themeDark = document.getElementById('themeDark');
+    const body = document.body;
+
+    function setTheme(theme) {
+      if (theme === 'dark') {
+        body.classList.add('dark');
+        iziToast.success({ title: 'Theme updated', message: 'Dark mode activated', position: 'topRight', timeout: 2000 });
+      } else {
+        body.classList.remove('dark');
+        iziToast.success({ title: 'Theme updated', message: 'Light mode activated', position: 'topRight', timeout: 2000 });
+      }
+    }
+
+    themeLight.addEventListener('click', () => setTheme('light'));
+    themeDark.addEventListener('click', () => setTheme('dark'));
+
+    // ----- PWA MANIFEST + SERVICE WORKER (same as before) -----
+    if ('serviceWorker' in navigator) {
+      const manifest = {
+        name: 'Zoxan AI',
+        short_name: 'Zoxan',
+        start_url: '.',
+        display: 'standalone',
+        theme_color: '#000000',
+        background_color: '#ffffff',
+        icons: [{
+          src: 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Ccircle cx=\'50\' cy=\'50\' r=\'45\' fill=\'black\'/%3E%3Ctext x=\'50\' y=\'70\' font-size=\'50\' text-anchor=\'middle\' fill=\'white\' font-family=\'Kavoon\'%3EZ%3C/text%3E%3C/svg%3E',
+          sizes: '192x192',
+          type: 'image/svg+xml'
+        }]
+      };
+      const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+      const manifestUrl = URL.createObjectURL(manifestBlob);
+      let link = document.querySelector('link[rel="manifest"]');
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'manifest';
+        document.head.appendChild(link);
+      }
+      link.href = manifestUrl;
+
+      const swCode = `
+        const CACHE_NAME = 'zoxan-cache-v1';
+        const urlsToCache = [
+          self.location.origin + '/',
+          'https://fonts.googleapis.com/css2?family=Kavoon&family=Poppins',
+          'https://cdn.tailwindcss.com',
+          'https://unpkg.com/lucide@latest'
+        ];
+        self.addEventListener('install', e => {
+          e.waitUntil(
+            caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+          );
+          self.skipWaiting();
+        });
+        self.addEventListener('fetch', e => {
+          e.respondWith(
+            caches.match(e.request).then(res => res || fetch(e.request))
+          );
+        });
+      `;
+      const swBlob = new Blob([swCode], { type: 'application/javascript' });
+      const swUrl = URL.createObjectURL(swBlob);
+      navigator.serviceWorker.register(swUrl).catch(err => console.warn('SW registration skipped', err));
+    }
+
+    // refresh icons after dynamic changes
+    document.addEventListener('click', () => setTimeout(() => lucide.createIcons(), 30));
+  })();
+</script>
+<!-- ensure icons after modal -->
+</body>
+</html>
